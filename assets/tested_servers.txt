@@ -1,0 +1,6 @@
+# Demo server file. Replace with real data from the admin backend before production deployment.
+# Each line can be in the format:
+# id|country|remark|config|protocol
+# Example:
+# us-1|US|New York|demo-config|VLESS
+
