@@ -1,39 +1,41 @@
 # NOVA VPN — Flutter Android client
 
-Flutter Android client for NOVA VPN by JEYRAN GROUP. The client uses `flutter_v2ray_client` for the actual Android VPN tunnel. No sample servers, fake speed, fake ping, or simulated connection status are included: until a real API URL and working server records are configured, the app clearly reports that no servers are available.
+Flutter Android client for NOVA VPN by JEYRAN GROUP. The client uses `flutter_v2ray_client` for the actual Android VPN tunnel. There are no bundled/demo servers or fabricated ping/speed values. If the backend is not configured or has no active servers, the app says so.
 
-## Run
+## Run the Android app
 
 1. Install Flutter (Dart SDK >= 3.3) and Android SDK.
-2. Configure a real HTTPS backend URL at build time:
+2. Set the deployed backend HTTPS URL at build/run time (this is a public service URL, not a secret):
 
    ```sh
    flutter pub get
    flutter run --dart-define=NOVA_API_BASE_URL=https://vpn-api.example.com
    ```
 
-3. Use a valid admin-managed server config on the backend. Country codes should be populated only from verified server IP geolocation by the operator; the client does not infer geography from a link remark.
+The app reads active server metadata from `GET /servers`; config is fetched only when the user connects from `GET /servers/{id}/config`. Admin changes therefore reach already-installed apps without publishing a new APK. A config cached by no-store HTTP directives is not persisted by the client.
 
-The VPN status is driven by the plugin status callback; pressing Start is not treated as proof of connection. Server protocol support depends on the selected plugin/Xray core version. Hysteria2 must not be enabled unless the deployed core actually supports it.
+The VPN status is driven by the plugin status callback; tapping Start is not treated as proof of connection. Protocol support depends on the selected plugin/Xray core version. Do not enable a protocol until it has been tested on the actual Android build and device.
 
-## Backend
+## Admin-managed configs
 
-`backend/` contains a small FastAPI + SQLite management API and a minimal admin page. It is a starter deployment, not a hosted service. Set a long random `NOVA_ADMIN_PASSWORD` and `NOVA_JWT_SECRET`, use HTTPS at a reverse proxy, restrict admin access, and back up the database. Do not commit credentials. App-facing config delivery is necessarily visible to a device running the client; hiding configuration strings in an APK or API response is not a security boundary. Production deployments should add user authentication, rate limiting, audit controls, and a secure delivery policy appropriate to the service.
+`backend/` contains a FastAPI + SQLite management API and a browser admin page. It supports add, edit/replace, enable/disable, order, delete, and bulk upsert. For a replacement, open `/admin`, sign in, click **ویرایش / تعویض کانفیگ**, replace the full JSON profile, then save. The app gets the replacement at its next connection attempt; an already-running tunnel continues using the config it started with, so disconnect/reconnect to apply a changed config. The panel also supports bulk JSON import.
 
-Run backend locally:
+The API expects a complete V2Ray/Xray JSON profile accepted by `flutter_v2ray_client` (valid JSON object with nonempty `outbounds`). Raw `vless://`, `vmess://`, or other share URLs are not accepted as complete JSON in this version. Never expose config contents in a public issue or log. Country code must be verified by the operator against the endpoint IP's geolocation; the app does not infer a country from the profile remark.
+
+### Run backend
 
 ```sh
 cd backend
 python -m venv .venv
 . .venv/bin/activate  # Windows: .venv\\Scripts\\activate
 pip install -r requirements.txt
-export NOVA_ADMIN_PASSWORD='replace-with-a-long-random-password'
-export NOVA_JWT_SECRET='replace-with-at-least-32-random-bytes'
+export NOVA_ADMIN_PASSWORD='use-a-unique-long-password'
+export NOVA_JWT_SECRET="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
 uvicorn app:app --host 127.0.0.1 --port 8000
 ```
 
-Open `/admin` for the manager. API docs are available at `/docs` in development. Server records are disabled by default and must be explicitly enabled by an administrator. The backend does not claim that a server works just because a profile parses; test it independently.
+Open `http://127.0.0.1:8000/admin` for local testing. For real use, deploy behind HTTPS, configure secrets in the hosting provider (never in source control/APK), restrict admin access, use persistent storage/backups for SQLite, and use rate limiting at the reverse proxy. The in-memory admin bearer token expires in one hour. Public endpoints intentionally deliver the selected server profile to the client: a determined user can inspect data delivered to their device, so the APK/API cannot make a profile secret from its owner.
 
-## Current scope
+## Not yet production-complete
 
-This commit provides the real Android client flow, server API contract/backend, server management UI, basic bilingual UI, and persistent settings. Production hosting, verified IP geolocation, account/subscription system, privacy/legal review, ad SDK integration, and signed APK release require operator credentials, infrastructure, and testing. Ads are intentionally omitted until the VPN core is stable.
+This source does not provision hosting, confirm the correctness or location of any server, build/sign an APK, provide account/subscription enforcement, establish a privacy/legal policy, or integrate ads. Ads remain intentionally omitted until tunnel behavior is tested. Before production, run Flutter analysis/tests and backend tests, validate all profiles on real Android devices, configure backups/monitoring/rate limits, review privacy and local legal requirements, and perform security review.
