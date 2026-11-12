@@ -38,4 +38,4 @@ Open `http://127.0.0.1:8000/admin` for local testing. For real use, deploy behin
 
 ## Not yet production-complete
 
-This source does not provision hosting, confirm the correctness or location of any server, build/sign an APK, provide account/subscription enforcement, establish a privacy/legal policy, or integrate ads. Ads remain intentionally omitted until tunnel behavior is tested. Before production, run Flutter analysis/tests and backend tests, validate all profiles on real Android devices, configure backups/monitoring/rate limits, review privacy and local legal requirements, and perform security review. 
+This source does not provision hosting, confirm the correctness or location of any server, build/sign an APK, provide account/subscription enforcement, establish a privacy/legal policy, or integrate ads. Ads remain intentionally omitted until tunnel behavior is tested. Before production, run Flutter analysis/tests and backend tests, validate all profiles on real Android devices, configure backups/monitoring/rate limits, review privacy and local legal requirements, and perform security review.
